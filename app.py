@@ -4,21 +4,25 @@ import PyPDF2
 import psycopg2
 from dotenv import load_dotenv
 
+
 # Function to extract text from a PDF file
 def extract_text_from_pdf(pdf_path):
     try:
-        with open(pdf_path, 'rb') as file:
+        with open(pdf_path, "rb") as file:
             pdf_reader = PyPDF2.PdfReader(file)
             text = ""
             for page in pdf_reader.pages:
                 page_text = page.extract_text()
                 if page_text:
-                    text += page_text
+                    # Remove NUL characters from the extracted text
+                    cleaned_text = page_text.replace("\x00", "")
+                    text += cleaned_text
             if not text:
                 raise ValueError("No text was extracted from the PDF.")
             return text
     except Exception as e:
         raise Exception(f"An error occurred while extracting text: {str(e)}")
+
 
 # Function to insert extracted text into the database
 def insert_into_db(content, conn):
@@ -29,6 +33,7 @@ def insert_into_db(content, conn):
     except Exception as e:
         raise Exception(f"Error inserting into database: {str(e)}")
 
+
 # Main function
 def main():
     # Load environment variables
@@ -36,10 +41,10 @@ def main():
 
     # Connect to the PostgreSQL database
     conn = psycopg2.connect(
-        dbname=os.getenv("DB_NAME"), 
-        user=os.getenv("DB_USER"), 
-        password=os.getenv("DB_PASSWORD"), 
-        host=os.getenv("DB_HOST")
+        dbname=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        host=os.getenv("DB_HOST"),
     )
 
     # Get the path to the PDF file
@@ -53,6 +58,7 @@ def main():
         print(e)
     finally:
         conn.close()
+
 
 # Run the main function
 if __name__ == "__main__":
