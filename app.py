@@ -2,8 +2,9 @@ import os
 import io
 import PyPDF2
 import psycopg2
-from psycopg2 import sql
+from dotenv import load_dotenv
 
+# Function to extract text from a PDF file
 def extract_text_from_pdf(pdf_path):
     try:
         with open(pdf_path, 'rb') as file:
@@ -19,6 +20,7 @@ def extract_text_from_pdf(pdf_path):
     except Exception as e:
         raise Exception(f"An error occurred while extracting text: {str(e)}")
 
+# Function to insert extracted text into the database
 def insert_into_db(content, conn):
     try:
         with conn.cursor() as cur:
@@ -27,17 +29,21 @@ def insert_into_db(content, conn):
     except Exception as e:
         raise Exception(f"Error inserting into database: {str(e)}")
 
+# Main function
 def main():
-    # Replace with your PostgreSQL connection details
+    # Load environment variables
+    load_dotenv()
+
+    # Connect to the PostgreSQL database
     conn = psycopg2.connect(
         dbname=os.getenv("DB_NAME"), 
         user=os.getenv("DB_USER"), 
         password=os.getenv("DB_PASSWORD"), 
         host=os.getenv("DB_HOST")
     )
-    
-    # Replace with the path to your PDF file
-    pdf_path = "/Users/nivix047/Desktop/mongoCRUD.pdf"
+
+    # Get the path to the PDF file
+    pdf_path = os.getenv("PDF_PATH")
 
     try:
         text = extract_text_from_pdf(pdf_path)
@@ -48,5 +54,6 @@ def main():
     finally:
         conn.close()
 
+# Run the main function
 if __name__ == "__main__":
     main()
